@@ -119,23 +119,34 @@ copy config.example.json config.json
 
 ### 1. 部署KV管理API
 
-#### 步骤1：创建KV命名空间
+#### 步骤1：使用原项目的KV空间
+如果您已经在使用基于 [cmliu/edgetunnel](https://github.com/cmliu/edgetunnel) 的项目：
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. 进入 `Workers & Pages` → `KV`
-3. 创建一个新的KV命名空间，例如命名为 `IP_OPTIMIZER`
+3. 找到您原项目使用的KV命名空间
+4. 记录该KV命名空间的名称，稍后需要绑定到新的Worker（不会两个项目冲突）
+
+如果您是首次使用，需要创建新的KV命名空间并绑定两个项目：
+1. 在KV页面点击 `Create a namespace`
+2. 输入命名空间名称，例如 `IP_OPTIMIZER`
+3. 点击 `Add` 创建
 
 #### 步骤2：部署Workers
 1. 进入 `Workers & Pages` → `Create application` → `Create Worker`
 2. 将 `kv-manager-worker.js` 的内容复制到编辑器中
 3. 点击 `Save and Deploy`
 
-#### 步骤3：绑定KV命名空间
+#### 步骤3：绑定KV命名空间（如果第一次使用原项目，请两个项目都按照该步骤绑定）
 1. 在Worker设置页面，进入 `Settings` → `Variables`
 2. 在 `KV Namespace Bindings` 部分点击 `Add binding`
 3. 设置：
    - Variable name: `KV`
    - KV namespace: 选择刚创建的命名空间
 4. 点击 `Save and deploy`
+
+**⚠️ 重要提醒：**
+- **必须绑定原项目的KV空间**：如果您已经在使用基于 [cmliu/edgetunnel](https://github.com/cmliu/edgetunnel) 的项目，请绑定该项目使用的KV命名空间，以确保IP数据的一致性
+- **建议使用自定义域名**：为避免 `*.workers.dev` 域名可能遇到的网络阻断问题，强烈建议为Worker配置自定义域名
 
 #### 步骤4：设置环境变量（鉴权配置）
 1. 在Worker设置页面，进入 `Settings` → `Variables`
@@ -145,8 +156,24 @@ copy config.example.json config.json
    - Value: 设置一个强密码作为API访问密钥（例如：`your_secure_api_key_123`）
 4. 点击 `Save and deploy`
 
-#### 步骤5：获取API URL
-部署完成后，你会得到一个类似这样的URL：
+#### 步骤5：配置自定义域名（推荐）
+为避免 `*.workers.dev` 域名的网络阻断问题，建议配置自定义域名：
+
+1. 在Worker设置页面，进入 `Settings` → `Triggers`
+2. 在 `Custom Domains` 部分点击 `Add Custom Domain`
+3. 输入您的自定义域名（如：`api.yourdomain.com`）
+4. 按照提示完成DNS配置
+5. 等待SSL证书自动配置完成
+
+#### 步骤6：获取API URL
+配置完成后，您可以使用以下URL访问API：
+
+**自定义域名（推荐）：**
+```
+https://api.yourdomain.com
+```
+
+**Workers域名（备用）：**
 ```
 https://your-worker.your-subdomain.workers.dev
 ```
