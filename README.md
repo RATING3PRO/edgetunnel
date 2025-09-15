@@ -1,6 +1,6 @@
 # Cloudflare IP优选系统
 
-> 基于 [edgetunnel](https://github.com/cmliu/edgetunnel) 项目开发的IP优选管理系统
+> 基于 [cmliu/edgetunnel](https://github.com/cmliu/edgetunnel) 项目开发的IP优选管理系统
 
 ## 📄 许可证
 
@@ -44,30 +44,30 @@ CFKVIPUPDATE/
 ## 功能特性
 
 ### KV管理API (kv-manager-worker.js)
-- 🔄 RESTful API接口，支持读取和写入KV空间
-- 🌐 完整的CORS支持，可从任何域名访问
-- 📊 提供健康检查和统计信息接口
-- 🔒 自动去重和内容大小检查
-- 📝 支持追加和替换两种更新模式
-- 🎨 美观的Web管理界面
+-  RESTful API接口，支持读取和写入KV空间
+-  完整的CORS支持，可从任何域名访问
+-  提供健康检查和统计信息接口
+-  自动去重和内容大小检查
+-  支持追加和替换两种更新模式
+-  Web管理界面
 
 ### Python客户端
 - **命令行版本** (`ip_optimizer.py`)：适合自动化脚本和服务器环境
 - **GUI版本** (`ip_optimizer_gui.py`)：提供图形界面，操作更直观
-- ⚡ 高并发IP延迟测试
-- 🎯 支持多种IP来源（官方、CM整理、AS列表等）
-- 🔧 灵活的配置选项
-- 📈 实时进度显示和详细日志
-- 🚀 自动上传最优IP到KV空间
-- 🔄 支持追加和替换模式
+-  高并发IP延迟测试
+-  支持多种IP来源（官方、CM整理、AS列表等）
+-  灵活的配置选项
+-  实时进度显示和详细日志
+-  自动上传最优IP到KV空间
+-  支持追加和替换模式
 
 ### 系统测试工具
 - **测试工具** (`test_system.py`)：全面的系统功能验证工具
-- 🔍 API健康检查和Web界面访问测试
-- 📊 KV存储的读取、写入和统计功能测试
-- 🚀 IP优选流程完整性模拟测试
-- 📈 自动化测试报告和结果统计
-- 🛠️ 支持自定义配置和命令行参数
+-  API健康检查和Web界面访问测试
+-  KV存储的读取、写入和统计功能测试
+-  IP优选流程完整性模拟测试
+-  自动化测试报告和结果统计
+-  支持自定义配置和命令行参数
 
 ## 部署指南
 
@@ -116,7 +116,6 @@ pip install -r requirements.txt
 编辑 `config.json` 文件，填入你的配置信息：
 ```json
 {
-  "api_url": "https://your-worker.your-subdomain.workers.dev",
   "timeout": 3,
   "max_workers": 50,
   "test_count": 3,
