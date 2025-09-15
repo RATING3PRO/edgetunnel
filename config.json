@@ -1,0 +1,10 @@
+{
+  "api_url": "https://your-worker.your-subdomain.workers.dev",
+  "timeout": 3,
+  "max_workers": 50,
+  "test_count": 3,
+  "best_count": 16,
+  "default_ip_source": "official",
+  "default_port": 443,
+  "default_action": "replace"
+}

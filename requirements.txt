@@ -1,0 +1,13 @@
+aiohttp>=3.8.0
+asyncio
+ssl
+socket
+ipaddress
+logging
+json
+time
+concurrent.futures
+dataclasses
+typing
+urllib3
+argparse
