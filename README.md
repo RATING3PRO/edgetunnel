@@ -26,11 +26,18 @@
 
 ```
 CFKVIPUPDATE/
+├── .github/
+│   └── workflows/         # GitHub Actions工作流
 ├── _worker.js              # 原有的Cloudflare Workers项目
 ├── kv-manager-worker.js    # 新的KV管理API Workers项目
-├── ip_optimizer.py         # Python IP优选客户端
+├── ip_optimizer.py         # Python IP优选客户端（命令行版）
+├── ip_optimizer_gui.py     # Python IP优选客户端（GUI版）
+├── test_system.py          # 系统功能测试工具
 ├── config.json            # 配置文件
 ├── requirements.txt       # Python依赖
+├── wrangler.toml          # Wrangler配置
+├── LICENSE               # GPL v2.0 许可证
+├── .gitignore            # Git忽略文件
 └── README.md             # 说明文档
 ```
 
@@ -44,13 +51,23 @@ CFKVIPUPDATE/
 - 📝 支持追加和替换两种更新模式
 - 🎨 美观的Web管理界面
 
-### Python客户端 (ip_optimizer.py)
+### Python客户端
+- **命令行版本** (`ip_optimizer.py`)：适合自动化脚本和服务器环境
+- **GUI版本** (`ip_optimizer_gui.py`)：提供图形界面，操作更直观
 - ⚡ 高并发IP延迟测试
 - 🎯 支持多种IP来源（官方、CM整理、AS列表等）
 - 🔧 灵活的配置选项
 - 📈 实时进度显示和详细日志
 - 🚀 自动上传最优IP到KV空间
 - 🔄 支持追加和替换模式
+
+### 系统测试工具
+- **测试工具** (`test_system.py`)：全面的系统功能验证工具
+- 🔍 API健康检查和Web界面访问测试
+- 📊 KV存储的读取、写入和统计功能测试
+- 🚀 IP优选流程完整性模拟测试
+- 📈 自动化测试报告和结果统计
+- 🛠️ 支持自定义配置和命令行参数
 
 ## 部署指南
 
@@ -60,7 +77,6 @@ CFKVIPUPDATE/
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. 进入 `Workers & Pages` → `KV`
 3. 创建一个新的KV命名空间，例如命名为 `IP_OPTIMIZER`
-4. 记录下命名空间ID
 
 #### 步骤2：部署Workers
 1. 进入 `Workers & Pages` → `Create application` → `Create Worker`
@@ -75,7 +91,15 @@ CFKVIPUPDATE/
    - KV namespace: 选择刚创建的命名空间
 4. 点击 `Save and deploy`
 
-#### 步骤4：获取API URL
+#### 步骤4：设置环境变量（鉴权配置）
+1. 在Worker设置页面，进入 `Settings` → `Variables`
+2. 在 `Environment Variables` 部分点击 `Add variable`
+3. 设置：
+   - Variable name: `API_KEY`
+   - Value: 设置一个强密码作为API访问密钥（例如：`your_secure_api_key_123`）
+4. 点击 `Save and deploy`
+
+#### 步骤5：获取API URL
 部署完成后，你会得到一个类似这样的URL：
 ```
 https://your-worker.your-subdomain.workers.dev
@@ -88,8 +112,8 @@ https://your-worker.your-subdomain.workers.dev
 pip install -r requirements.txt
 ```
 
-#### 步骤2：配置API URL
-编辑 `config.json` 文件，将 `api_url` 替换为你的Workers URL：
+#### 步骤2：配置文件设置
+编辑 `config.json` 文件，填入你的配置信息：
 ```json
 {
   "api_url": "https://your-worker.your-subdomain.workers.dev",
@@ -99,13 +123,19 @@ pip install -r requirements.txt
   "best_count": 16,
   "default_ip_source": "official",
   "default_port": 443,
-  "default_action": "replace"
+  "default_action": "replace",
+  "worker_url": "https://your-worker.your-subdomain.workers.dev",
+  "worker_api_key": "YOUR_WORKER_API_KEY_HERE"
 }
 ```
 
+**配置项说明：**
+- `worker_url`: 部署Worker后获得的URL
+- `worker_api_key`: 在Worker环境变量中设置的API_KEY值
+
 ## 使用方法
 
-### 基本使用
+### 命令行版本
 
 ```bash
 # 使用默认配置运行优选
@@ -120,6 +150,43 @@ python ip_optimizer.py --action append
 # 使用自定义配置文件
 python ip_optimizer.py --config my_config.json
 ```
+
+### GUI版本
+
+```bash
+# 启动图形界面版本
+python ip_optimizer_gui.py
+```
+
+GUI版本功能：
+- 直观的图形界面操作
+- 实时显示优选进度
+- 可视化配置参数设置
+- 结果展示和导出功能
+- 日志信息实时查看
+
+### 系统测试
+
+```bash
+# 运行完整的系统功能测试
+python test_system.py
+
+# 使用自定义配置文件
+python test_system.py --config my_config.json
+
+# 指定API URL（覆盖配置文件设置）
+python test_system.py --api-url https://your-worker.workers.dev
+```
+
+**测试项目包括：**
+- API健康检查
+- Web界面访问测试
+- IP列表获取功能
+- IP列表更新功能
+- 统计信息接口
+- IP优选流程模拟
+
+测试工具会自动运行所有测试项目并生成详细报告，帮助验证系统各项功能是否正常工作。
 
 ### 命令行参数
 
@@ -152,12 +219,34 @@ python ip_optimizer.py --config my_config.json
 | `default_ip_source` | 默认IP来源 | official |
 | `default_port` | 默认测试端口 | 443 |
 | `default_action` | 默认操作类型 | replace |
+| `worker_url` | Worker API地址 | 必填 |
+| `worker_api_key` | Worker API密钥 | 必填 |
 
 ## API接口文档
+
+### 鉴权说明
+
+所有API接口（除首页和健康检查外）都需要提供API密钥进行鉴权。支持以下三种方式：
+
+1. **请求头方式**（推荐）：
+```http
+X-API-Key: your_api_key_here
+```
+
+2. **Authorization头方式**：
+```http
+Authorization: Bearer your_api_key_here
+```
+
+3. **URL参数方式**：
+```http
+GET /api/ips?api_key=your_api_key_here
+```
 
 ### 获取IP列表
 ```http
 GET /api/ips?key=ADD.txt&format=json
+X-API-Key: your_api_key_here
 ```
 
 **参数：**
@@ -181,6 +270,7 @@ GET /api/ips?key=ADD.txt&format=json
 ```http
 POST /api/ips
 Content-Type: application/json
+X-API-Key: your_api_key_here
 
 {
   "ips": ["1.1.1.1:443", "8.8.8.8:443"],
@@ -273,6 +363,11 @@ docker run -v $(pwd)/config.json:/app/config.json ip-optimizer
 2. **并发限制**: 根据网络环境调整 `max_workers` 参数，避免过高并发
 3. **KV配额**: Cloudflare KV有读写次数限制，注意使用频率
 4. **IP来源**: 不同来源的IP质量可能不同，建议测试后选择最适合的来源
+5. **API密钥安全**: 
+   - 请妥善保管Worker API密钥，不要在代码中硬编码
+   - 建议定期更换API密钥
+   - 将 `config.json` 添加到 `.gitignore` 文件中，避免泄露配置信息
+   - 使用强密码作为API密钥，建议包含字母、数字和特殊字符
 
 ## 许可证
 

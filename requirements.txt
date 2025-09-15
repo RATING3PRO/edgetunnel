@@ -1,13 +1,8 @@
 aiohttp>=3.8.0
-asyncio
-ssl
-socket
-ipaddress
-logging
-json
-time
-concurrent.futures
-dataclasses
 typing
 urllib3
 argparse
+# GUI版本依赖 (tkinter通常是Python标准库的一部分)
+# 如果在某些环境下tkinter不可用，可能需要安装:
+# tk (在某些Linux发行版中)
+# 或者使用系统包管理器安装python3-tk

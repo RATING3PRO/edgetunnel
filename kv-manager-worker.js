@@ -29,9 +29,52 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
       'Access-Control-Max-Age': '86400',
     };
+
+// 鉴权验证函数
+async function authenticateRequest(request, env) {
+  try {
+    // 从环境变量获取API密钥
+    const validApiKey = env.API_KEY;
+    
+    // 如果未设置API密钥，则拒绝访问
+    if (!validApiKey) {
+      return {
+        success: false,
+        error: '服务器未配置API密钥，请联系管理员设置 API_KEY 环境变量'
+      };
+    }
+    
+    // 从请求头获取API密钥
+    const providedKey = request.headers.get('X-API-Key') || 
+                       request.headers.get('Authorization')?.replace('Bearer ', '') ||
+                       new URL(request.url).searchParams.get('api_key');
+    
+    if (!providedKey) {
+      return {
+        success: false,
+        error: '缺少API密钥，请在请求头中提供 X-API-Key 或 Authorization，或在URL参数中提供 api_key'
+      };
+    }
+    
+    // 验证API密钥
+    if (providedKey !== validApiKey) {
+      return {
+        success: false,
+        error: 'API密钥无效，访问被拒绝'
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: '鉴权验证失败: ' + error.message
+    };
+  }
+}
 
     // 处理预检请求
     if (method === 'OPTIONS') {
@@ -54,6 +97,23 @@ export default {
             ...corsHeaders
           }
         });
+      }
+
+      // 鉴权验证（除了首页和健康检查）
+      if (path !== '/' && path !== '/api/health') {
+        const authResult = await authenticateRequest(request, env);
+        if (!authResult.success) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: authResult.error
+          }), {
+            status: 401,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders
+            }
+          });
+        }
       }
 
       // API路由处理
@@ -463,11 +523,38 @@ async function getHomePage(corsHeaders) {
         <h2>🔧 使用说明</h2>
         <ol>
             <li>确保已在Cloudflare Workers中绑定KV命名空间，变量名为 <code>KV</code></li>
+            <li>⚠️ <strong>重要：</strong>在Workers环境变量中设置 <code>API_KEY</code> 作为访问密钥</li>
+            <li>除首页和健康检查外，所有API都需要提供API密钥进行鉴权</li>
+            <li>API密钥可通过以下方式提供：
+                <ul>
+                    <li>请求头：<code>X-API-Key: your_api_key</code></li>
+                    <li>Authorization头：<code>Authorization: Bearer your_api_key</code></li>
+                    <li>URL参数：<code>?api_key=your_api_key</code></li>
+                </ul>
+            </li>
             <li>所有API都支持CORS，可以从任何域名访问</li>
             <li>IP列表以换行符分隔存储在KV中</li>
             <li>支持追加和替换两种更新模式</li>
             <li>自动去重处理</li>
         </ol>
+    </div>
+    
+    <div class="api-section">
+        <h2>🔐 安全配置</h2>
+        <div class="example">
+            <p><strong>在Cloudflare Workers中设置环境变量：</strong></p>
+            <ol>
+                <li>进入Workers控制台，选择您的Worker</li>
+                <li>点击 "Settings" → "Variables"</li>
+                <li>添加环境变量：
+                    <ul>
+                        <li>变量名：<code>API_KEY</code></li>
+                        <li>值：您的自定义API密钥（建议使用强密码）</li>
+                    </ul>
+                </li>
+                <li>保存并重新部署Worker</li>
+            </ol>
+        </div>
     </div>
     
     <div class="api-section">
