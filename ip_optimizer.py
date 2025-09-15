@@ -60,22 +60,25 @@ class CloudflareIPOptimizer:
     
     def __init__(self, config: Dict):
         self.config = config
-        self.api_url = config.get('api_url', '').rstrip('/')
+        self.worker_url = config.get('worker_url', '').rstrip('/')
+        self.worker_api_key = config.get('worker_api_key', '')
         self.timeout = config.get('timeout', 3)
         self.max_workers = config.get('max_workers', 50)
         self.test_count = config.get('test_count', 3)
         self.best_count = config.get('best_count', 16)
         
-        # 验证API URL
-        if not self.api_url:
-            raise ValueError("API URL不能为空")
+        # 验证Worker URL和API密钥
+        if not self.worker_url:
+            raise ValueError("Worker URL不能为空")
+        if not self.worker_api_key:
+            raise ValueError("Worker API密钥不能为空")
         
         try:
-            parsed = urlparse(self.api_url)
+            parsed = urlparse(self.worker_url)
             if not parsed.scheme or not parsed.netloc:
-                raise ValueError("API URL格式无效")
+                raise ValueError("Worker URL格式无效")
         except Exception as e:
-            raise ValueError(f"API URL格式错误: {e}")
+            raise ValueError(f"Worker URL格式错误: {e}")
     
     async def get_cf_ips(self, ip_source: str = 'official') -> List[str]:
         """获取Cloudflare IP列表"""
@@ -293,12 +296,18 @@ class CloudflareIPOptimizer:
             'key': 'ADD.txt'
         }
         
+        # 准备鉴权头
+        headers = {
+            'Content-Type': 'application/json',
+            'X-API-Key': self.worker_api_key
+        }
+        
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
                 async with session.post(
-                    f"{self.api_url}/api/ips",
+                    f"{self.worker_url}/api/ips",
                     json=data,
-                    headers={'Content-Type': 'application/json'}
+                    headers=headers
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -319,8 +328,9 @@ class CloudflareIPOptimizer:
     async def get_current_ips(self) -> List[str]:
         """获取当前KV中的IP列表"""
         try:
+            headers = {'X-API-Key': self.worker_api_key}
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-                async with session.get(f"{self.api_url}/api/ips?format=json") as response:
+                async with session.get(f"{self.worker_url}/api/ips?format=json", headers=headers) as response:
                     if response.status == 200:
                         result = await response.json()
                         if result.get('success'):
@@ -384,7 +394,8 @@ def load_config(config_file: str = 'config.json') -> Dict:
 def create_default_config(config_file: str = 'config.json'):
     """创建默认配置文件"""
     default_config = {
-        "api_url": "https://your-worker.your-subdomain.workers.dev",
+        "worker_url": "https://your-worker.your-subdomain.workers.dev",
+        "worker_api_key": "your-api-key-here",
         "timeout": 3,
         "max_workers": 50,
         "test_count": 3,
@@ -404,7 +415,8 @@ def create_default_config(config_file: str = 'config.json'):
 async def main():
     parser = argparse.ArgumentParser(description='Cloudflare IP优选客户端')
     parser.add_argument('--config', default='config.json', help='配置文件路径')
-    parser.add_argument('--api-url', help='Workers API URL')
+    parser.add_argument('--worker-url', help='Workers URL')
+    parser.add_argument('--api-key', help='API密钥')
     parser.add_argument('--source', choices=['official', 'cm', 'as13335', 'as209242', 'proxyip'], 
                        help='IP来源')
     parser.add_argument('--port', type=int, choices=[443, 2053, 2083, 2087, 2096, 8443], 
@@ -423,8 +435,10 @@ async def main():
     config = load_config(args.config)
     
     # 命令行参数覆盖配置文件
-    if args.api_url:
-        config['api_url'] = args.api_url
+    if args.worker_url:
+        config['worker_url'] = args.worker_url
+    if args.api_key:
+        config['worker_api_key'] = args.api_key
     if args.source:
         config['default_ip_source'] = args.source
     if args.port:
@@ -433,8 +447,12 @@ async def main():
         config['default_action'] = args.action
     
     # 检查必要配置
-    if not config.get('api_url'):
-        logger.error("请在配置文件中设置api_url或使用--api-url参数")
+    if not config.get('worker_url'):
+        logger.error("请在配置文件中设置worker_url或使用--worker-url参数")
+        logger.info("使用 --create-config 创建默认配置文件")
+        return
+    if not config.get('worker_api_key'):
+        logger.error("请在配置文件中设置worker_api_key或使用--api-key参数")
         logger.info("使用 --create-config 创建默认配置文件")
         return
     

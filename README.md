@@ -69,6 +69,47 @@ CFKVIPUPDATE/
 -  自动化测试报告和结果统计
 -  支持自定义配置和命令行参数
 
+## 快速开始
+
+### 1. 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. 配置设置
+
+首次使用需要创建配置文件：
+
+```bash
+# 复制示例配置文件
+cp config.example.json config.json
+
+# 或在Windows中
+copy config.example.json config.json
+```
+
+然后编辑 `config.json` 文件，填入您的Worker信息：
+
+```json
+{
+  "worker_url": "https://your-worker.your-subdomain.workers.dev",
+  "worker_api_key": "your-api-key-here",
+  "timeout": 3,
+  "max_workers": 50,
+  "test_count": 3,
+  "best_count": 16,
+  "default_ip_source": "official",
+  "default_port": 443,
+  "default_action": "replace"
+}
+```
+
+**重要说明：**
+- `worker_url`：您的Cloudflare Worker部署地址
+- `worker_api_key`：在Worker环境变量中设置的API密钥
+- `config.json` 文件已被添加到 `.gitignore`，不会被提交到版本控制
+
 ## 部署指南
 
 ### 1. 部署KV管理API
@@ -173,8 +214,8 @@ python test_system.py
 # 使用自定义配置文件
 python test_system.py --config my_config.json
 
-# 指定API URL（覆盖配置文件设置）
-python test_system.py --api-url https://your-worker.workers.dev
+# 指定Worker URL（覆盖配置文件设置）
+python test_system.py --worker-url https://your-worker.workers.dev --api-key your-api-key
 ```
 
 **测试项目包括：**
@@ -192,7 +233,8 @@ python test_system.py --api-url https://your-worker.workers.dev
 | 参数 | 说明 | 可选值 |
 |------|------|--------|
 | `--config` | 配置文件路径 | 默认: config.json |
-| `--api-url` | Workers API URL | 覆盖配置文件中的设置 |
+| `--worker-url` | Workers URL | 覆盖配置文件中的设置 |
+| `--api-key` | API密钥 | 覆盖配置文件中的设置 |
 | `--source` | IP来源 | official, cm, as13335, as209242, proxyip |
 | `--port` | 测试端口 | 443, 2053, 2083, 2087, 2096, 8443 |
 | `--action` | 操作类型 | replace（替换）, append（追加） |
@@ -210,7 +252,8 @@ python test_system.py --api-url https://your-worker.workers.dev
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
-| `api_url` | Workers API地址 | 必填 |
+| `worker_url` | Workers地址 | 必填 |
+| `worker_api_key` | Workers API密钥 | 必填 |
 | `timeout` | 单次连接超时时间（秒） | 3 |
 | `max_workers` | 最大并发测试数 | 50 |
 | `test_count` | 每个IP测试次数 | 3 |
@@ -218,8 +261,7 @@ python test_system.py --api-url https://your-worker.workers.dev
 | `default_ip_source` | 默认IP来源 | official |
 | `default_port` | 默认测试端口 | 443 |
 | `default_action` | 默认操作类型 | replace |
-| `worker_url` | Worker API地址 | 必填 |
-| `worker_api_key` | Worker API密钥 | 必填 |
+
 
 ## API接口文档
 

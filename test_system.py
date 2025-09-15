@@ -34,16 +34,18 @@ logger = logging.getLogger(__name__)
 class SystemTester:
     """系统测试器"""
     
-    def __init__(self, api_url: str):
-        self.api_url = api_url.rstrip('/')
+    def __init__(self, worker_url: str, worker_api_key: str):
+        self.worker_url = worker_url.rstrip('/')
+        self.worker_api_key = worker_api_key
         self.test_results = []
     
     async def test_api_health(self) -> bool:
         """测试API健康检查"""
         logger.info("测试API健康检查...")
         try:
+            headers = {'X-API-Key': self.worker_api_key}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.api_url}/api/health") as response:
+                async with session.get(f"{self.worker_url}/api/health", headers=headers) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get('success') and data.get('status') == 'healthy':
@@ -63,9 +65,10 @@ class SystemTester:
         """测试获取IP列表"""
         logger.info("测试获取IP列表...")
         try:
+            headers = {'X-API-Key': self.worker_api_key}
             async with aiohttp.ClientSession() as session:
                 # 测试JSON格式
-                async with session.get(f"{self.api_url}/api/ips?format=json") as response:
+                async with session.get(f"{self.worker_url}/api/ips?format=json", headers=headers) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get('success'):
@@ -73,7 +76,7 @@ class SystemTester:
                             logger.info(f"✅ 获取IP列表成功，当前有 {ip_count} 个IP")
                             
                             # 测试文本格式
-                            async with session.get(f"{self.api_url}/api/ips?format=text") as text_response:
+                            async with session.get(f"{self.worker_url}/api/ips?format=text", headers=headers) as text_response:
                                 if text_response.status == 200:
                                     text_data = await text_response.text()
                                     logger.info(f"✅ 文本格式获取成功，内容长度: {len(text_data)}")
@@ -103,6 +106,7 @@ class SystemTester:
         ]
         
         try:
+            headers = {'Content-Type': 'application/json', 'X-API-Key': self.worker_api_key}
             async with aiohttp.ClientSession() as session:
                 # 测试替换模式
                 data = {
@@ -112,9 +116,9 @@ class SystemTester:
                 }
                 
                 async with session.post(
-                    f"{self.api_url}/api/ips",
+                    f"{self.worker_url}/api/ips",
                     json=data,
-                    headers={'Content-Type': 'application/json'}
+                    headers=headers
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -130,9 +134,9 @@ class SystemTester:
                             }
                             
                             async with session.post(
-                                f"{self.api_url}/api/ips",
+                                f"{self.worker_url}/api/ips",
                                 json=append_data,
-                                headers={'Content-Type': 'application/json'}
+                                headers=headers
                             ) as append_response:
                                 if append_response.status == 200:
                                     append_result = await append_response.json()
@@ -160,8 +164,9 @@ class SystemTester:
         """测试统计信息"""
         logger.info("测试统计信息...")
         try:
+            headers = {'X-API-Key': self.worker_api_key}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.api_url}/api/stats") as response:
+                async with session.get(f"{self.worker_url}/api/stats", headers=headers) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get('success'):
@@ -186,7 +191,7 @@ class SystemTester:
         logger.info("测试Web界面...")
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(self.api_url) as response:
+                async with session.get(self.worker_url) as response:
                     if response.status == 200:
                         html = await response.text()
                         if 'Cloudflare IP优选 KV管理API' in html:
@@ -217,8 +222,9 @@ class SystemTester:
         
         try:
             # 1. 获取当前IP列表
+            headers = {'X-API-Key': self.worker_api_key}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.api_url}/api/ips?format=json") as response:
+                async with session.get(f"{self.worker_url}/api/ips?format=json", headers=headers) as response:
                     if response.status == 200:
                         data = await response.json()
                         if data.get('success'):
@@ -237,9 +243,9 @@ class SystemTester:
                 }
                 
                 async with session.post(
-                    f"{self.api_url}/api/ips",
+                    f"{self.worker_url}/api/ips",
                     json=upload_data,
-                    headers={'Content-Type': 'application/json'}
+                    headers={'Content-Type': 'application/json', 'X-API-Key': self.worker_api_key}
                 ) as upload_response:
                     if upload_response.status == 200:
                         result = await upload_response.json()
@@ -247,7 +253,7 @@ class SystemTester:
                             logger.info(f"✅ 模拟优选上传成功: {result.get('message')}")
                             
                             # 3. 验证上传结果
-                            async with session.get(f"{self.api_url}/api/stats") as stats_response:
+                            async with session.get(f"{self.worker_url}/api/stats", headers=headers) as stats_response:
                                 if stats_response.status == 200:
                                     stats_data = await stats_response.json()
                                     if stats_data.get('success'):
@@ -271,7 +277,7 @@ class SystemTester:
         """运行所有测试"""
         logger.info("=" * 60)
         logger.info("开始系统功能测试")
-        logger.info(f"API URL: {self.api_url}")
+        logger.info(f"Worker URL: {self.worker_url}")
         logger.info("=" * 60)
         
         tests = [
@@ -335,22 +341,28 @@ async def main():
     
     parser = argparse.ArgumentParser(description='系统功能测试')
     parser.add_argument('--config', default='config.json', help='配置文件路径')
-    parser.add_argument('--api-url', help='API URL（覆盖配置文件）')
+    parser.add_argument('--worker-url', help='Worker URL（覆盖配置文件）')
+    parser.add_argument('--api-key', help='API密钥（覆盖配置文件）')
     
     args = parser.parse_args()
     
     # 加载配置
     config = load_config(args.config)
     
-    # 获取API URL
-    api_url = args.api_url or config.get('api_url')
+    # 获取Worker URL和API密钥
+    worker_url = args.worker_url or config.get('worker_url')
+    worker_api_key = args.api_key or config.get('worker_api_key')
     
-    if not api_url:
-        logger.error("请在配置文件中设置api_url或使用--api-url参数")
+    if not worker_url:
+        logger.error("请在配置文件中设置worker_url或使用--worker-url参数")
+        return
+    
+    if not worker_api_key:
+        logger.error("请在配置文件中设置worker_api_key或使用--api-key参数")
         return
     
     # 运行测试
-    tester = SystemTester(api_url)
+    tester = SystemTester(worker_url, worker_api_key)
     results = await tester.run_all_tests()
     
     # 返回退出码
