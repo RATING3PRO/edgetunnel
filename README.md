@@ -27,7 +27,7 @@
 ```
 CFKVIPUPDATE/
 ├── .github/
-│   └── workflows/         # GitHub Actions工作流
+│   └── workflows/         # 原有的GitHub Actions工作流
 ├── _worker.js              # 原有的Cloudflare Workers项目
 ├── kv-manager-worker.js    # 新的KV管理API Workers项目
 ├── ip_optimizer.py         # Python IP优选客户端（命令行版）
@@ -35,10 +35,10 @@ CFKVIPUPDATE/
 ├── test_system.py          # 系统功能测试工具
 ├── config.json            # 配置文件
 ├── requirements.txt       # Python依赖
-├── wrangler.toml          # Wrangler配置
-├── LICENSE               # GPL v2.0 许可证
+├── wrangler.toml          # 原有的Wrangler配置
+├── LICENSE               # 使用原项目相同的GPL v2.0 许可证
 ├── .gitignore            # Git忽略文件
-└── README.md             # 说明文档
+└── README.md             # 新的说明文档
 ```
 
 ## 功能特性
