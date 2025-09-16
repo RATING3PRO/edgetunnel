@@ -49,16 +49,16 @@ class SystemTester:
                     if response.status == 200:
                         data = await response.json()
                         if data.get('success') and data.get('status') == 'healthy':
-                            logger.info("✅ API健康检查通过")
+                            logger.info("API健康检查通过")
                             return True
                         else:
-                            logger.error(f"❌ API健康检查失败: {data}")
+                            logger.error(f"API健康检查失败: {data}")
                             return False
                     else:
-                        logger.error(f"❌ API健康检查失败，状态码: {response.status}")
+                        logger.error(f"API健康检查失败，状态码: {response.status}")
                         return False
         except Exception as e:
-            logger.error(f"❌ API健康检查异常: {e}")
+            logger.error(f"API健康检查异常: {e}")
             return False
     
     async def test_get_ips(self) -> bool:
@@ -73,36 +73,36 @@ class SystemTester:
                         data = await response.json()
                         if data.get('success'):
                             ip_count = data.get('data', {}).get('count', 0)
-                            logger.info(f"✅ 获取IP列表成功，当前有 {ip_count} 个IP")
+                            logger.info(f"获取IP列表成功，当前有 {ip_count} 个IP")
                             
                             # 测试文本格式
                             async with session.get(f"{self.worker_url}/api/ips?format=text", headers=headers) as text_response:
                                 if text_response.status == 200:
                                     text_data = await text_response.text()
-                                    logger.info(f"✅ 文本格式获取成功，内容长度: {len(text_data)}")
+                                    logger.info(f"文本格式获取成功，内容长度: {len(text_data)}")
                                     return True
                                 else:
-                                    logger.error(f"❌ 文本格式获取失败，状态码: {text_response.status}")
+                                    logger.error(f"文本格式获取失败，状态码: {text_response.status}")
                                     return False
                         else:
-                            logger.error(f"❌ 获取IP列表失败: {data.get('error')}")
+                            logger.error(f"获取IP列表失败: {data.get('error')}")
                             return False
                     else:
-                        logger.error(f"❌ 获取IP列表失败，状态码: {response.status}")
+                        logger.error(f"获取IP列表失败，状态码: {response.status}")
                         return False
         except Exception as e:
-            logger.error(f"❌ 获取IP列表异常: {e}")
+            logger.error(f"获取IP列表异常: {e}")
             return False
     
     async def test_update_ips(self) -> bool:
         """测试更新IP列表"""
         logger.info("测试更新IP列表...")
         
-        # 测试数据
+        # 测试数据，格式：IP:端口#延迟ms
         test_ips = [
-            "1.1.1.1:443",
-            "8.8.8.8:443",
-            "1.0.0.1:443"
+            "1.1.1.1:443#25.67ms",
+            "8.8.8.8:443#30.12ms",
+            "1.0.0.1:443#28.45ms"
         ]
         
         try:
@@ -123,10 +123,10 @@ class SystemTester:
                     if response.status == 200:
                         result = await response.json()
                         if result.get('success'):
-                            logger.info(f"✅ 替换模式更新成功: {result.get('message')}")
+                            logger.info(f"替换模式更新成功: {result.get('message')}")
                             
                             # 测试追加模式
-                            append_ips = ["9.9.9.9:443"]
+                            append_ips = ["9.9.9.9:443#22.34ms"]
                             append_data = {
                                 "ips": append_ips,
                                 "action": "append",
@@ -141,23 +141,23 @@ class SystemTester:
                                 if append_response.status == 200:
                                     append_result = await append_response.json()
                                     if append_result.get('success'):
-                                        logger.info(f"✅ 追加模式更新成功: {append_result.get('message')}")
+                                        logger.info(f"追加模式更新成功: {append_result.get('message')}")
                                         return True
                                     else:
-                                        logger.error(f"❌ 追加模式更新失败: {append_result.get('error')}")
+                                        logger.error(f"追加模式更新失败: {append_result.get('error')}")
                                         return False
                                 else:
-                                    logger.error(f"❌ 追加模式更新失败，状态码: {append_response.status}")
+                                    logger.error(f"追加模式更新失败，状态码: {append_response.status}")
                                     return False
                         else:
-                            logger.error(f"❌ 替换模式更新失败: {result.get('error')}")
+                            logger.error(f"替换模式更新失败: {result.get('error')}")
                             return False
                     else:
                         error_text = await response.text()
-                        logger.error(f"❌ 更新IP列表失败，状态码: {response.status}, 错误: {error_text}")
+                        logger.error(f"更新IP列表失败，状态码: {response.status}, 错误: {error_text}")
                         return False
         except Exception as e:
-            logger.error(f"❌ 更新IP列表异常: {e}")
+            logger.error(f"更新IP列表异常: {e}")
             return False
     
     async def test_stats(self) -> bool:
@@ -171,19 +171,19 @@ class SystemTester:
                         data = await response.json()
                         if data.get('success'):
                             stats = data.get('data', {})
-                            logger.info(f"✅ 统计信息获取成功:")
+                            logger.info(f"统计信息获取成功:")
                             logger.info(f"   - 总IP数: {stats.get('totalIPs')}")
                             logger.info(f"   - 内容大小: {stats.get('contentSizeMB')}MB")
                             logger.info(f"   - 示例IP: {stats.get('sampleIPs')}")
                             return True
                         else:
-                            logger.error(f"❌ 统计信息获取失败: {data.get('error')}")
+                            logger.error(f"统计信息获取失败: {data.get('error')}")
                             return False
                     else:
-                        logger.error(f"❌ 统计信息获取失败，状态码: {response.status}")
+                        logger.error(f"统计信息获取失败，状态码: {response.status}")
                         return False
         except Exception as e:
-            logger.error(f"❌ 统计信息获取异常: {e}")
+            logger.error(f"统计信息获取异常: {e}")
             return False
     
     async def test_web_interface(self) -> bool:
@@ -195,29 +195,29 @@ class SystemTester:
                     if response.status == 200:
                         html = await response.text()
                         if 'Cloudflare IP优选 KV管理API' in html:
-                            logger.info("✅ Web界面访问成功")
+                            logger.info("Web界面访问成功")
                             return True
                         else:
-                            logger.error("❌ Web界面内容异常")
+                            logger.error("Web界面内容异常")
                             return False
                     else:
-                        logger.error(f"❌ Web界面访问失败，状态码: {response.status}")
+                        logger.error(f"Web界面访问失败，状态码: {response.status}")
                         return False
         except Exception as e:
-            logger.error(f"❌ Web界面访问异常: {e}")
+            logger.error(f"Web界面访问异常: {e}")
             return False
     
     async def test_ip_optimization_simulation(self) -> bool:
         """模拟IP优选流程测试"""
         logger.info("模拟IP优选流程测试...")
         
-        # 模拟优选结果
+        # 模拟优选结果，格式：IP:端口#延迟ms
         optimized_ips = [
-            "104.16.1.1:443",
-            "104.16.2.2:443",
-            "104.16.3.3:443",
-            "172.64.1.1:443",
-            "172.64.2.2:443"
+            "104.16.1.1:443#15.23ms",
+            "104.16.2.2:443#18.45ms",
+            "104.16.3.3:443#20.67ms",
+            "172.64.1.1:443#22.89ms",
+            "172.64.2.2:443#25.12ms"
         ]
         
         try:
@@ -250,7 +250,7 @@ class SystemTester:
                     if upload_response.status == 200:
                         result = await upload_response.json()
                         if result.get('success'):
-                            logger.info(f"✅ 模拟优选上传成功: {result.get('message')}")
+                            logger.info(f"模拟优选上传成功: {result.get('message')}")
                             
                             # 3. 验证上传结果
                             async with session.get(f"{self.worker_url}/api/stats", headers=headers) as stats_response:
@@ -263,14 +263,14 @@ class SystemTester:
                             
                             return True
                         else:
-                            logger.error(f"❌ 模拟优选上传失败: {result.get('error')}")
+                            logger.error(f"模拟优选上传失败: {result.get('error')}")
                             return False
                     else:
                         error_text = await upload_response.text()
-                        logger.error(f"❌ 模拟优选上传失败，状态码: {upload_response.status}, 错误: {error_text}")
+                        logger.error(f"模拟优选上传失败，状态码: {upload_response.status}, 错误: {error_text}")
                         return False
         except Exception as e:
-            logger.error(f"❌ 模拟IP优选流程异常: {e}")
+            logger.error(f"模拟IP优选流程异常: {e}")
             return False
     
     async def run_all_tests(self) -> Dict[str, bool]:
@@ -301,7 +301,7 @@ class SystemTester:
                 if result:
                     passed += 1
             except Exception as e:
-                logger.error(f"❌ {test_name} 测试异常: {e}")
+                logger.error(f"{test_name} 测试异常: {e}")
                 results[test_name] = False
         
         # 输出测试总结
@@ -310,15 +310,15 @@ class SystemTester:
         logger.info("=" * 60)
         
         for test_name, result in results.items():
-            status = "✅ 通过" if result else "❌ 失败"
+            status = "通过" if result else "失败"
             logger.info(f"{test_name}: {status}")
         
         logger.info(f"\n总计: {passed}/{total} 个测试通过")
         
         if passed == total:
-            logger.info("🎉 所有测试都通过了！系统功能正常。")
+            logger.info("所有测试都通过了！系统功能正常。")
         else:
-            logger.warning(f"⚠️  有 {total - passed} 个测试失败，请检查相关功能。")
+            logger.warning(f"有 {total - passed} 个测试失败，请检查相关功能。")
         
         logger.info("=" * 60)
         

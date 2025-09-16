@@ -3,6 +3,7 @@
   "max_workers": 50,
   "test_count": 3,
   "best_count": 16,
+  "ip_count": 0,
   "default_ip_source": "official",
   "default_port": 443,
   "default_action": "replace",

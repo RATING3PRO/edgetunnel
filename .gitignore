@@ -37,6 +37,15 @@ Thumbs.db
 test_results/
 *.test
 
+# 构建文件
+build/
+dist/
+*.spec
+CloudflareIPOptimizer.spec
+
+# 构建产物（排除可执行文件）
+CloudflareIPOptimizer.exe
+
 # Node.js (如果需要)
 node_modules/
 npm-debug.log*

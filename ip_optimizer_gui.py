@@ -59,6 +59,7 @@ class CloudflareIPOptimizerGUI:
         self.timeout_var = tk.StringVar(value="3")
         self.max_workers_var = tk.StringVar(value="50")
         self.operation_var = tk.StringVar(value="replace")
+        self.ip_count_var = tk.StringVar(value="500")
         
         # 状态变量
         self.is_running = False
@@ -166,6 +167,12 @@ class CloudflareIPOptimizerGUI:
         ttk.Label(params_frame, text="上传模式:").grid(row=1, column=2, sticky=tk.W, pady=2, padx=(20, 0))
         operation_combo = ttk.Combobox(params_frame, textvariable=self.operation_var, values=["replace", "append"], width=10, state="readonly")
         operation_combo.grid(row=1, column=3, sticky=tk.W, pady=2, padx=(5, 0))
+        
+        ttk.Label(params_frame, text="IP数量限制:").grid(row=2, column=0, sticky=tk.W, pady=2)
+        ip_count_entry = ttk.Entry(params_frame, textvariable=self.ip_count_var, width=10)
+        ip_count_entry.grid(row=2, column=1, sticky=tk.W, pady=2, padx=(5, 0))
+        
+        ttk.Label(params_frame, text="个（0表示不限制）").grid(row=2, column=2, columnspan=2, sticky=tk.W, pady=2, padx=(5, 0))
         row += 1
         
         # 控制按钮
@@ -418,9 +425,10 @@ class CloudflareIPOptimizerGUI:
                             
                             # 去重并限制数量
                             ips = list(set(ips))
-                            if len(ips) > 500:
+                            ip_limit = int(self.ip_count_var.get())
+                            if ip_limit > 0 and len(ips) > ip_limit:
                                 import random
-                                ips = random.sample(ips, 500)
+                                ips = random.sample(ips, ip_limit)
                             
                             logger.info(f"解析得到 {len(ips)} 个有效IP")
                             return ips
@@ -446,16 +454,23 @@ class CloudflareIPOptimizerGUI:
                 try:
                     start_time = time.time()
                     
-                    # 创建SSL上下文
-                    ssl_context = ssl.create_default_context()
-                    ssl_context.check_hostname = False
-                    ssl_context.verify_mode = ssl.CERT_NONE
-                    
-                    # 测试连接
-                    reader, writer = await asyncio.wait_for(
-                        asyncio.open_connection(ip, port, ssl=ssl_context),
-                        timeout=timeout
-                    )
+                    # 根据端口决定是否使用SSL
+                    if port == 443:
+                        # HTTPS端口使用SSL
+                        ssl_context = ssl.create_default_context()
+                        ssl_context.check_hostname = False
+                        ssl_context.verify_mode = ssl.CERT_NONE
+                        
+                        reader, writer = await asyncio.wait_for(
+                            asyncio.open_connection(ip, port, ssl=ssl_context),
+                            timeout=timeout
+                        )
+                    else:
+                        # HTTP端口不使用SSL
+                        reader, writer = await asyncio.wait_for(
+                            asyncio.open_connection(ip, port),
+                            timeout=timeout
+                        )
                     
                     latency = (time.time() - start_time) * 1000
                     writer.close()
@@ -497,8 +512,8 @@ class CloudflareIPOptimizerGUI:
             logger.error("没有可上传的IP")
             return
         
-        # 生成IP列表文本
-        ip_list = '\n'.join([result.ip for result in results])
+        # 生成IP列表文本，格式：IP:端口#延迟ms
+        ip_list = '\n'.join([f"{result.ip}:{result.port}#{result.latency:.2f}ms" for result in results])
         
         logger.info(f"正在上传 {len(results)} 个IP到KV空间，操作: {self.operation_var.get()}")
         
@@ -511,7 +526,7 @@ class CloudflareIPOptimizerGUI:
             
             # 使用Worker API上传
             upload_data = {
-                'ips': [result.ip for result in results],
+                'ips': [f"{result.ip}:{result.port}#{result.latency:.2f}ms" for result in results],
                 'action': self.operation_var.get(),
                 'key': 'ADD.txt'
             }

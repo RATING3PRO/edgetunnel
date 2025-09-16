@@ -464,17 +464,17 @@ async function getHomePage(corsHeaders) {
 </head>
 <body>
     <div class="header">
-        <h1>🚀 Cloudflare IP优选 KV管理API</h1>
+        <h1>Cloudflare IP优选 KV管理API</h1>
         <p>用于管理优选IP列表的RESTful API服务</p>
     </div>
     
     <div class="status">
-        <h3>✅ 服务状态：正常运行</h3>
+        <h3>服务状态：正常运行</h3>
         <p>KV命名空间已成功绑定，API服务可用</p>
     </div>
     
     <div class="api-section">
-        <h2>📋 API接口文档</h2>
+        <h2>API接口文档</h2>
         
         <div class="endpoint">
             <span class="method get">GET</span>
@@ -520,10 +520,10 @@ async function getHomePage(corsHeaders) {
     </div>
     
     <div class="api-section">
-        <h2>🔧 使用说明</h2>
+        <h2>使用说明</h2>
         <ol>
             <li>确保已在Cloudflare Workers中绑定KV命名空间，变量名为 <code>KV</code></li>
-            <li>⚠️ <strong>重要：</strong>在Workers环境变量中设置 <code>API_KEY</code> 作为访问密钥</li>
+            <li><strong>重要：</strong>在Workers环境变量中设置 <code>API_KEY</code> 作为访问密钥</li>
             <li>除首页和健康检查外，所有API都需要提供API密钥进行鉴权</li>
             <li>API密钥可通过以下方式提供：
                 <ul>
@@ -540,7 +540,7 @@ async function getHomePage(corsHeaders) {
     </div>
     
     <div class="api-section">
-        <h2>🔐 安全配置</h2>
+        <h2>安全配置</h2>
         <div class="example">
             <p><strong>在Cloudflare Workers中设置环境变量：</strong></p>
             <ol>
@@ -558,7 +558,7 @@ async function getHomePage(corsHeaders) {
     </div>
     
     <div class="api-section">
-        <h2>⚡ 快速测试</h2>
+        <h2>快速测试</h2>
         <p>点击以下链接测试API：</p>
         <ul>
             <li><a href="/api/health" target="_blank">健康检查</a></li>

@@ -135,9 +135,10 @@ class CloudflareIPOptimizer:
         
         # 去重并限制数量
         unique_ips = list(set(ips))
-        if len(unique_ips) > 512:
+        ip_count = self.config.get('ip_count', 0)
+        if ip_count > 0 and len(unique_ips) > ip_count:
             import random
-            unique_ips = random.sample(unique_ips, 512)
+            unique_ips = random.sample(unique_ips, ip_count)
         
         logger.info(f"解析得到 {len(unique_ips)} 个有效IP")
         return unique_ips
@@ -274,7 +275,7 @@ class CloudflareIPOptimizer:
         
         # 取前N个最优IP
         best_results = successful_results[:self.best_count]
-        best_ips = [f"{r.ip}:{r.port}" for r in best_results]
+        best_ips = [f"{r.ip}:{r.port}#{r.latency:.2f}ms" for r in best_results]
         
         logger.info(f"选出 {len(best_ips)} 个最优IP")
         for i, result in enumerate(best_results[:10]):  # 显示前10个

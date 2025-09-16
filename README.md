@@ -2,7 +2,7 @@
 
 > 基于 [cmliu/edgetunnel](https://github.com/cmliu/edgetunnel) 项目开发的IP优选管理系统
 
-## 📄 许可证
+## 许可证
 
 本项目基于 GNU General Public License v2.0 许可证开源。
 
@@ -32,12 +32,18 @@ CFKVIPUPDATE/
 ├── kv-manager-worker.js    # 新的KV管理API Workers项目
 ├── ip_optimizer.py         # Python IP优选客户端（命令行版）
 ├── ip_optimizer_gui.py     # Python IP优选客户端（GUI版）
+├── ip_optimizer_standalone.py  # Python IP优选客户端（独立版源码）
 ├── test_system.py          # 系统功能测试工具
 ├── config.json            # 配置文件
 ├── requirements.txt       # Python依赖
+├── requirements_standalone.txt  # 独立版本依赖
+├── build_standalone.py     # 独立版本打包脚本
+├── dist/
+│   └── CloudflareIPOptimizer.exe  # 独立版本可执行文件
 ├── wrangler.toml          # 原有的Wrangler配置
 ├── LICENSE               # 使用原项目相同的GPL v2.0 许可证
 ├── .gitignore            # Git忽略文件
+├── 独立版本使用说明.md      # 独立版本详细使用说明
 └── README.md             # 新的说明文档
 ```
 
@@ -54,12 +60,21 @@ CFKVIPUPDATE/
 ### Python客户端
 - **命令行版本** (`ip_optimizer.py`)：适合自动化脚本和服务器环境
 - **GUI版本** (`ip_optimizer_gui.py`)：提供图形界面，操作更直观
+- **独立版本** (`CloudflareIPOptimizer.exe`)：单文件可执行程序，无需Python环境
+  - 内置GUI界面，操作简便
+  - 单个exe文件（约9.5MB），开箱即用
+  - 内置配置管理，无需外部配置文件
+  - 支持所有核心功能：多IP源、多端口测试、追加/替换模式
+  - 实时日志显示和进度跟踪
+  - 适合普通用户和无Python环境的系统
 -  高并发IP延迟测试
 -  支持多种IP来源（官方、CM整理、AS列表等）
+-  **自定义IP数量限制**：支持用户自定义获取的IP数量，提高测试效率
 -  灵活的配置选项
 -  实时进度显示和详细日志
 -  自动上传最优IP到KV空间
 -  支持追加和替换模式
+-  **新格式支持**：IP上传格式已更新为 `ip:port#延迟ms`，便于了解每个IP的性能表现
 
 ### 系统测试工具
 - **测试工具** (`test_system.py`)：全面的系统功能验证工具
@@ -99,11 +114,11 @@ copy config.example.json config.json
   "max_workers": 50,
   "test_count": 3,
   "best_count": 16,
+  "ip_count": 0,
   "default_ip_source": "official",
   "default_port": 443,
   "default_action": "replace"
-}
-```
+}```
 
 **重要说明：**
 - `worker_url`：您的Cloudflare Worker部署地址
@@ -144,7 +159,7 @@ copy config.example.json config.json
    - KV namespace: 选择刚创建的命名空间
 4. 点击 `Save and deploy`
 
-**⚠️ 重要提醒：**
+**重要提醒：**
 - **必须绑定原项目的KV空间**：如果您已经在使用基于 [cmliu/edgetunnel](https://github.com/cmliu/edgetunnel) 的项目，请绑定该项目使用的KV命名空间，以确保IP数据的一致性
 - **建议使用自定义域名**：为避免 `*.workers.dev` 域名可能遇到的网络阻断问题，强烈建议为Worker配置自定义域名
 
@@ -193,13 +208,13 @@ pip install -r requirements.txt
   "max_workers": 50,
   "test_count": 3,
   "best_count": 16,
+  "ip_count": 0,
   "default_ip_source": "official",
   "default_port": 443,
   "default_action": "replace",
   "worker_url": "https://your-worker.your-subdomain.workers.dev",
   "worker_api_key": "YOUR_WORKER_API_KEY_HERE"
-}
-```
+}```
 
 **配置项说明：**
 - `worker_url`: 部署Worker后获得的URL
@@ -236,6 +251,43 @@ GUI版本功能：
 - 可视化配置参数设置
 - 结果展示和导出功能
 - 日志信息实时查看
+
+### 独立版本（推荐普通用户使用）
+
+独立版本是打包好的单文件可执行程序，无需安装Python环境即可直接运行：
+
+```bash
+# Windows系统直接双击运行
+dist\CloudflareIPOptimizer.exe
+
+# 或在命令行中运行
+cd dist
+CloudflareIPOptimizer.exe
+```
+
+**独立版本特点：**
+- **零依赖**：单个exe文件（约9.5MB），无需安装Python
+- **内置配置**：程序内设置参数，无需外部配置文件
+- **功能完整**：支持所有核心功能和最新的IP格式
+- **操作简便**：图形化界面，一键开始优选
+- **实时反馈**：进度显示、日志查看、状态提示
+
+**使用步骤：**
+1. 双击运行 `CloudflareIPOptimizer.exe`
+2. 点击"配置设置"填入Worker URL和API Key
+3. 选择测试参数（端口、IP来源、操作模式）
+4. 点击"开始优选"即可自动完成IP测试和上传
+
+**配置说明：**
+- **Worker URL**: 您的Cloudflare Worker部署地址
+- **API Key**: 在Worker环境变量中设置的API密钥
+- **超时时间**: 单次IP测试的超时时间（默认3秒）
+- **最大并发数**: 同时测试的IP数量（默认50）
+- **测试次数**: 每个IP的测试次数（默认3次）
+- **保存IP数量**: 保存到KV的最优IP数量（默认16个）
+- **IP数量限制**: 获取IP的数量限制（GUI版本默认500，独立版本默认0不限制）
+
+详细使用说明请参考：[独立版本使用说明.md](独立版本使用说明.md)
 
 ### 系统测试
 
@@ -290,6 +342,7 @@ python test_system.py --worker-url https://your-worker.workers.dev --api-key you
 | `max_workers` | 最大并发测试数 | 50 |
 | `test_count` | 每个IP测试次数 | 3 |
 | `best_count` | 保存的最优IP数量 | 16 |
+| `ip_count` | 获取IP数量限制（0表示不限制） | 0 |
 | `default_ip_source` | 默认IP来源 | official |
 | `default_port` | 默认测试端口 | 443 |
 | `default_action` | 默认操作类型 | replace |

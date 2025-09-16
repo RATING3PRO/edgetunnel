@@ -1,0 +1,25 @@
+# 独立GUI程序打包所需依赖
+# 安装命令: pip install -r requirements_standalone.txt
+
+# 异步HTTP客户端
+aiohttp>=3.8.0
+
+# 打包工具
+pyinstaller>=5.0.0
+
+# 标准库依赖（通常已包含在Python中，但列出以确保兼容性）
+# tkinter - GUI框架（Python标准库）
+# asyncio - 异步编程（Python标准库）
+# ssl - SSL/TLS支持（Python标准库）
+# socket - 网络编程（Python标准库）
+# threading - 多线程（Python标准库）
+# logging - 日志记录（Python标准库）
+# json - JSON处理（Python标准库）
+# ipaddress - IP地址处理（Python标准库）
+# dataclasses - 数据类（Python 3.7+标准库）
+# typing - 类型提示（Python标准库）
+# concurrent.futures - 并发执行（Python标准库）
+# time - 时间处理（Python标准库）
+# datetime - 日期时间（Python标准库）
+# os - 操作系统接口（Python标准库）
+# sys - 系统相关（Python标准库）
